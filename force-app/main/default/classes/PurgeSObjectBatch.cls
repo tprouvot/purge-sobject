@@ -21,7 +21,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<sObjec
 	/**
 	 * @description Instanciate constructor without parameters, is called by the schedulable class
 	 */
-	public SObjectCleaningBatch() {
+	public PurgeSObjectBatch() {
 		setParams(null);
 	}
 
@@ -38,19 +38,18 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<sObjec
 	public void execute(Database.BatchableContext BC, List<sObject> scope){
 		SObjectType sObjType = ((SObject) Type.forName(this.sobjectName).newInstance()).getSObjectType();
 		if (sObjType.getDescribe().isDeletable()) {
-			List<Database.DeleteResult> drList = Database.delete(scope, false);
-			Log.error(drList);
+			Database.delete(scope, false);
 		}
 	}
 
 	/**
-	 * @description Call the SObjectCleaningBatch to handle the deletion of the next records Object to parse
+	 * @description Call the PurgeSObjectBatch to handle the deletion of the next records Object to parse
 	 * @param  BC BatchableContext
 	 */
 	public void finish(Database.BatchableContext BC){
 		//call the batch only if the Object list is not the last one
 		if(sequence < lastSequence){
-			Database.executeBatch(new SObjectCleaningBatch(sequence, lastSequence));
+			Database.executeBatch(new PurgeSObjectBatch(sequence, lastSequence));
 		}
 	}
 
@@ -64,8 +63,8 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<sObjec
 			sequence = 0;
 		}
 		//get the next sequences to avoid issue with missing numbers
-		List<SObjectCleaningSetting__mdt> settings = [SELECT SObjectApiName__c, Sequence__c
-		FROM SObjectCleaningSetting__mdt WHERE Sequence__c >:sequence ORDER BY Sequence__c];
+		List<PurgeSObjectSetting__mdt> settings = [SELECT SObjectApiName__c, Sequence__c
+		FROM PurgeSObjectSetting__mdt WHERE Sequence__c >:sequence ORDER BY Sequence__c];
 
 		//store the lastIndex to end the process
 		if(lastSequence == null){
