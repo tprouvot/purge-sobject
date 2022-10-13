@@ -11,6 +11,9 @@ The configuration is based on two parts:
 
 - PurgeSObjectSetting__mdt : Custom Metadata which contains the SObjects to purge and the sequence to adress the deletion.
 - ToBeDeleted__c : formula field which contains the deletion rules.
+- PublishPlatformEventOk__c : if checked, a platform event will be published on failure.
+- PublishPlatformEventKo__c : if checked, a platform event will be published on sucess.
+- PlatformEventExternalId__c : Field API name of the record external id.
 
 ### To add a new SObject to the list
 
