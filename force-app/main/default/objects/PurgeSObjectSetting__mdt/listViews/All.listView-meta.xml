@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
-	<fullName>All</fullName>
-	<columns>Sequence__c</columns>
-	<columns>MasterLabel</columns>
-	<columns>SObjectApiName__c</columns>
-	<filterScope>Everything</filterScope>
-	<label>All</label>
+    <fullName>All</fullName>
+    <columns>Sequence__c</columns>
+    <columns>MasterLabel</columns>
+    <columns>SObjectApiName__c</columns>
+    <columns>PublishPlatformEventOk__c</columns>
+    <columns>PublishPlatformEventKo__c</columns>
+    <columns>PlatformEventExternalId__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>All</label>
+    <language>en_US</language>
 </ListView>
