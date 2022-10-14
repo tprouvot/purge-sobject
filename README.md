@@ -15,6 +15,30 @@ The configuration is based on two parts:
 - PublishPlatformEventKo__c : if checked, a platform event will be published on failure.
 - PlatformEventExternalId__c : Field API name of the record external id.
 
+Platform event example
+``` json
+{
+  "data": {
+    "schema": "PYnPMKjl73Qx3gYURNrang",
+    "payload": {
+      "CreatedById": "0057a00000CsmbuAAB",
+      "Success__c": true,
+      "Message__c": null,
+      "CreatedDate": "2022-10-14T07:13:03.051Z",
+      "SObject__c": "Account",
+      "ExternalId__c": "37",
+      "Id__c": "0017a00002556lhAAA"
+    },
+    "event": {
+      "EventUuid": "3e74df29-9a31-4463-8639-f460e5dd9cff",
+      "replayId": 2682310,
+      "EventApiName": "PurgeSObjectBatch__e"
+    }
+  },
+  "channel": "/event/PurgeSObjectBatch__e"
+}
+```
+
 ### To add a new SObject to the list
 
 - Create a Boolean formula field named `ToBeDeleted__c` and define the criteria to purge the SObject. If your criteria are too complex to be addressed by a formula, you can create a boolean field and handle the logic in a flow or an apex trigger.
