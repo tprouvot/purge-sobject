@@ -1,6 +1,6 @@
 @isTest
 private class PurgeSObjectBatch_Test {
-
+	//TODO This test class must be adapted to your implemenation and SObjects to purge
 	private static final String STRING_DELETE_CRITERIA = 'TO-BE-DELETED';
 
 	@TestSetup
@@ -28,7 +28,6 @@ private class PurgeSObjectBatch_Test {
 		System.assertEquals(false, leadToBeDeleted.IsDeleted, 'IsDeleted should be false');
 		System.assertEquals(false, leadNotToBeDeleted.ToBeDeleted__c, 'ToBeDeleted__c should be false');
 		Test.startTest();
-
 		Database.executeBatch(new PurgeSObjectBatch());
 		Test.stopTest();
 

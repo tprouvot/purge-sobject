@@ -104,7 +104,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 				String extId = String.isNotEmpty(this.externalId) ? String.valueOf(scopeMap.get(recId).get(this.externalId)) : '';
 
 				PurgeSObjectBatch__e pe = new PurgeSObjectBatch__e(Id__c = recId, Success__c = dr.isSuccess(),
-				ExternalId__c = extId);
+				ExternalId__c = extId, SObject__c = this.sobjectName, Message__c = getError(dr.getErrors()));
 				peList.add(pe);
 			}
 		}
@@ -129,5 +129,13 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 			ext = ', ' + this.externalId;
 		}
 		return ext;
+	}
+
+	public String getError(List<Database.Error> errors){
+		String error = '';
+		for (Database.Error er: errors) {
+			error += '[' + er.getStatusCode() + '] ' + er.getFields() + ' ' + er.getMessage();
+		}
+		return error;
 	}
 }
