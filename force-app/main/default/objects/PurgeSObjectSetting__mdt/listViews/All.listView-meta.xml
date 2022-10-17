@@ -4,6 +4,7 @@
     <columns>Sequence__c</columns>
     <columns>MasterLabel</columns>
     <columns>SObjectApiName__c</columns>
+    <columns>ExternalToBeDeletedField__c</columns>
     <columns>PublishPlatformEventOk__c</columns>
     <columns>PublishPlatformEventKo__c</columns>
     <columns>PlatformEventExternalId__c</columns>
