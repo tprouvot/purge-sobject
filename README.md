@@ -47,6 +47,16 @@ Platform event example
 
 [![SObjedt config](./screenshots/settings.png)](./screenshots/settings.png)
 
+## Particular Use Cases
+
+For some particular SObjects, ContentDocument for example, you can't create custom field on it.
+
+You can use a field from another object since this field is referenced in the object.
+
+For our use case, we referenced the ContentVersion's field from the ContentDocument to handle the deletion: LatestPublishedVersion.ToBeDeleted__c
+
+[![External To Be Deleted](./screenshots/externalToBeDeleted.png)](./screenshots/externalToBeDeleted.png)
+
 ## How To Run SObject Purge Framework ?
 
 - Schedule the `PurgeSObjectBatchSchedulable` class
