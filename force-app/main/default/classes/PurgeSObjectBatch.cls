@@ -8,6 +8,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	private Boolean publishPeOk;
 	private Boolean publishPeKo;
 	private String externalId;
+	private String externalToBeDeleted;
 
 	@TestVisible
 	private String sobjectName;
@@ -34,7 +35,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	 */
 	public Database.QueryLocator start(Database.BatchableContext BC){
 		String extId = getExternalIdValue();
-		String query = 'SELECT Id' + extId + ' FROM ' + String.escapeSingleQuotes(this.sobjectName) + ' WHERE ToBeDeleted__c=true';
+		String query = 'SELECT Id' + extId + ' FROM ' + String.escapeSingleQuotes(this.sobjectName) + ' WHERE ' + getToBeDeletedField() + '=true';
 		return Database.getQueryLocator(query);
 	}
 
@@ -70,7 +71,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		}
 		//get the next sequences to avoid issue with missing numbers
 		List<PurgeSObjectSetting__mdt> settings = [SELECT SObjectApiName__c, Sequence__c, PublishPlatformEventOk__c,
-		PublishPlatformEventKo__c, PlatformEventExternalId__c FROM PurgeSObjectSetting__mdt
+		PublishPlatformEventKo__c, PlatformEventExternalId__c, ExternalToBeDeletedField__c FROM PurgeSObjectSetting__mdt
 		WHERE Sequence__c >:sequence ORDER BY Sequence__c];
 
 		//store the lastIndex to end the process
@@ -85,6 +86,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		this.publishPeOk = sett.PublishPlatformEventOk__c;
 		this.publishPeKo = sett.PublishPlatformEventKo__c;
 		this.externalId = sett.PlatformEventExternalId__c;
+		this.externalToBeDeleted = sett.ExternalToBeDeletedField__c;
 	}
 
 	/**
@@ -131,11 +133,24 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		return ext;
 	}
 
+	/**
+	 * @description Returns formated Database.Error to String
+	 * @param errors
+	 * @return  `String` Database.Error information (statusCdoe, fields and message)
+	 */
 	public String getError(List<Database.Error> errors){
 		String error = '';
 		for (Database.Error er: errors) {
 			error += '[' + er.getStatusCode() + '] ' + er.getFields() + ' ' + er.getMessage();
 		}
 		return error;
+	}
+
+	/**
+	 * @description Allow user to define another field to be considered for deletion rules
+	 * @return  `String` externalToBeDeleted if not blank, ToBeDeleted__c otherwise
+	 */
+	public String getToBeDeletedField(){
+		return String.isNotBlank(this.externalToBeDeleted) ? this.externalToBeDeleted : 'ToBeDeleted__c';
 	}
 }
