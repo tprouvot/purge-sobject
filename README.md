@@ -20,10 +20,11 @@ The logic can be configured in two places
 <em>ie LatestPublishedVersion.ToBeDeleted__c to delete ContentDocument based on ContentVersion field.</em>
 ### Custom Metadata Records
 
-PurgeSObjectSetting__mdt : Custom Metadata which contains the SObjects to purge and the sequence to adress the deletion.
-- Sequence__c : Allow user to set the execution order for the purge, useful if we have to delete childs objects before the main one.
+PurgeSObjectSetting__mdt : Custom Metadata which contains the SObjects to purge and the sequence to address the deletion. The repo contains a custom metadata on Lead to provide an example, you don't have to deploy it.
+
+- Sequence__c : Allow user to set the execution order for the purge, useful if we have to delete child objects before the main one.
 - ExternalToBeDeletedField__c : Allow user to reference a field which contains delete logic on a related object.
-- PublishPlatformEventOk__c : if checked, a platform event will be published on sucess.
+- PublishPlatformEventOk__c : if checked, a platform event will be published on success.
 - PublishPlatformEventKo__c : if checked, a platform event will be published on failure.
 - PlatformEventExternalId__c : Field API name of the record external id.
 
@@ -57,7 +58,7 @@ Platform event example
 - Create a new custom metadata in PurgeSObjectSettings by entering the SObject **API Name** and the sequence to purge the object.
 
 
-[![SObjedt config](./screenshots/settings.png)](./screenshots/settings.png)
+[![SObject config](./screenshots/settings.png)](./screenshots/settings.png)
 
 ## Particular Use Cases
 
@@ -74,7 +75,11 @@ For our use case, we referenced the ContentVersion's field from the ContentDocum
 - Schedule the `PurgeSObjectBatchSchedulable` class
 	- Apex Classes > 'Schedule Apex' button > Enter `PurgeSObjectBatchSchedulable`
 
-[![SObjedt config](./screenshots/schedule.png)](./screenshots/schedule.png)
+[![Schedule](./screenshots/schedule.png)](./screenshots/schedule.png)
+
+## Test Class
+The framework contains a test class (PurgeSObjectBatch_Test) which must be adapted to your implementation.
+Currently it show how to test the deletion on Lead but it should reflect your custom metadata configuration
 
 ## Deploy to Salesforce
 
