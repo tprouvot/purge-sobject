@@ -8,9 +8,21 @@ SObject Purge Framework is not an official Salesforce product, it has not been o
 ## How Do You Configure SObject Purge Framework ?
 
 The configuration is based on two parts:
+- The delete logic.
+- The custom metadata records.
 
-- PurgeSObjectSetting__mdt : Custom Metadata which contains the SObjects to purge and the sequence to adress the deletion.
-- ToBeDeleted__c : formula field which contains the deletion rules.
+### Delete logic
+
+The logic can be configured in two places
+- By default, a checkbox (formula) field named "ToBeDeleted__c" on the object to purge.
+-  **Or** a boolean field on a related object to insert in the CMDT field ExternalToBeDeletedField__c.
+
+<em>ie LatestPublishedVersion.ToBeDeleted__c to delete ContentDocument based on ContentVersion field.</em>
+### Custom Metadata Records
+
+PurgeSObjectSetting__mdt : Custom Metadata which contains the SObjects to purge and the sequence to adress the deletion.
+- Sequence__c : Allow user to set the execution order for the purge, useful if we have to delete childs objects before the main one.
+- ExternalToBeDeletedField__c : Allow user to reference a field which contains delete logic on a related object.
 - PublishPlatformEventOk__c : if checked, a platform event will be published on sucess.
 - PublishPlatformEventKo__c : if checked, a platform event will be published on failure.
 - PlatformEventExternalId__c : Field API name of the record external id.
