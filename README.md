@@ -74,6 +74,12 @@ For our use case, we referenced the ContentVersion's field from the ContentDocum
 
 - Schedule the `PurgeSObjectBatchSchedulable` class
 	- Apex Classes > 'Schedule Apex' button > Enter `PurgeSObjectBatchSchedulable`
+- With CRON schedule:
+```java
+//CRON to scheduled batch run at 1 AM, on the 1st February.
+String sch = '0 0 1 1 2 ?';
+String jobId = System.schedule('TestSchedule', sch , new PurgeSObjectBatchSchedulable());
+```
 
 [![Schedule](./screenshots/schedule.png)](./screenshots/schedule.png)
 
