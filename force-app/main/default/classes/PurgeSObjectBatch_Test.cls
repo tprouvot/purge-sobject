@@ -28,7 +28,9 @@ private class PurgeSObjectBatch_Test {
 		System.assertEquals(false, leadToBeDeleted.IsDeleted, 'IsDeleted should be false');
 		System.assertEquals(false, leadNotToBeDeleted.ToBeDeleted__c, 'ToBeDeleted__c should be false');
 		Test.startTest();
-		Database.executeBatch(new PurgeSObjectBatch());
+		PurgeSObjectBatch batch = new PurgeSObjectBatch();
+		batch.publishPeOk = true;
+		Database.executeBatch(batch);
 		Test.stopTest();
 
 		leadToBeDeleted = [SELECT Id, IsDeleted FROM Lead WHERE Id =:leadToBeDeleted.Id ALL ROWS];

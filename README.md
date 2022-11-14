@@ -79,7 +79,16 @@ For our use case, we referenced the ContentVersion's field from the ContentDocum
 
 ## Test Class
 The framework contains a test class (PurgeSObjectBatch_Test) which must be adapted to your implementation.
-Currently it show how to test the deletion on Lead but it should reflect your custom metadata configuration
+Currently it show how to test the deletion on Lead but it should reflect your custom metadata configuration.
+
+If you disable the platform event publication in custom metadata, the class PurgeSObjectBatch may miss some coverage.
+To handle this particular use case, you can override the variable to have this code covered:
+```java
+PurgeSObjectBatch batch = new PurgeSObjectBatch();
+batch.publishPeOk = true;
+Database.executeBatch(batch);
+```
+
 
 ## Deploy to Salesforce
 

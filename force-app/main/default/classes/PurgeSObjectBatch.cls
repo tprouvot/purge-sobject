@@ -5,7 +5,9 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 
 	private Integer sequence;
 	private Integer lastSequence;
+	@TestVisible
 	private Boolean publishPeOk;
+	@TestVisible
 	private Boolean publishPeKo;
 	private String externalId;
 	private String externalToBeDeleted;
