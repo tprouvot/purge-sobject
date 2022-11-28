@@ -11,6 +11,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	private Boolean publishPeKo;
 	private String externalId;
 	private String externalToBeDeleted;
+	private String whereClause;
 
 	@TestVisible
 	private String sobjectName;
@@ -37,7 +38,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	 */
 	public Database.QueryLocator start(Database.BatchableContext BC){
 		String extId = getExternalIdValue();
-		String query = 'SELECT Id' + extId + ' FROM ' + String.escapeSingleQuotes(this.sobjectName) + ' WHERE ' + getToBeDeletedField() + '=true';
+		String query = 'SELECT Id' + extId + ' FROM ' + String.escapeSingleQuotes(this.sobjectName) + ' WHERE ' + getWhereClause();
 		return Database.getQueryLocator(query);
 	}
 
@@ -73,8 +74,8 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		}
 		//get the next sequences to avoid issue with missing numbers
 		List<PurgeSObjectSetting__mdt> settings = [SELECT SObjectApiName__c, Sequence__c, PublishPlatformEventOk__c,
-		PublishPlatformEventKo__c, PlatformEventExternalId__c, ExternalToBeDeletedField__c FROM PurgeSObjectSetting__mdt
-		WHERE Sequence__c >:sequence ORDER BY Sequence__c];
+		PublishPlatformEventKo__c, PlatformEventExternalId__c, ExternalToBeDeletedField__c, WhereClauseToBeDeleted__c
+		FROM PurgeSObjectSetting__mdt WHERE Sequence__c >:sequence ORDER BY Sequence__c];
 
 		//store the lastIndex to end the process
 		if(lastSequence == null){
@@ -89,6 +90,7 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		this.publishPeKo = sett.PublishPlatformEventKo__c;
 		this.externalId = sett.PlatformEventExternalId__c;
 		this.externalToBeDeleted = sett.ExternalToBeDeletedField__c;
+		this.whereClause = sett.WhereClauseToBeDeleted__c;
 	}
 
 	/**
@@ -154,5 +156,17 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	 */
 	public String getToBeDeletedField(){
 		return String.isNotBlank(this.externalToBeDeleted) ? this.externalToBeDeleted : 'ToBeDeleted__c';
+	}
+
+	/**
+	 * @description Build thge where clause base on different options (ToBeDeleted__c, ExternalToBeDeletedField__c or WhereClauseToBeDeleted__c)
+	 * @return  `String` Where clause for the query
+	 */
+	public String getWhereClause(){
+		if(String.isNotBlank(this.whereClause)){
+			return this.whereClause;
+		} else{
+			return getToBeDeletedField() + '=true';
+		}
 	}
 }

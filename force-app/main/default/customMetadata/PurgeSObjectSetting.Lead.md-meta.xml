@@ -3,8 +3,12 @@
     <label>Lead</label>
     <protected>false</protected>
     <values>
+        <field>ExternalToBeDeletedField__c</field>
+        <value xsi:nil="true" />
+    </values>
+    <values>
         <field>PlatformEventExternalId__c</field>
-        <value xsi:nil="true"/>
+        <value xsi:nil="true" />
     </values>
     <values>
         <field>PublishPlatformEventKo__c</field>
@@ -21,5 +25,9 @@
     <values>
         <field>Sequence__c</field>
         <value xsi:type="xsd:double">1.0</value>
+    </values>
+    <values>
+        <field>WhereClauseToBeDeleted__c</field>
+        <value xsi:type="xsd:string">LastName=&apos;TO-BE-DELETED&apos;</value>
     </values>
 </CustomMetadata>

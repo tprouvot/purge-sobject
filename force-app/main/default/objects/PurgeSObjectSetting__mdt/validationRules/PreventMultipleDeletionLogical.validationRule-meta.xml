@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PreventMultipleDeletionLogical</fullName>
+    <active>true</active>
+    <description>Prevent user to fill multiple logical.</description>
+    <errorConditionFormula>AND(NOT( ISBLANK(WhereClauseToBeDeleted__c)),  NOT( ISBLANK(ExternalToBeDeletedField__c)))</errorConditionFormula>
+    <errorMessage>You can&apos;t configure two ways to identify records. WhereClauseToBeDeleted__c or ExternalToBeDeletedField__c must be empty</errorMessage>
+</ValidationRule>
