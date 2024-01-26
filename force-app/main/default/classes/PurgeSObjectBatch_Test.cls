@@ -21,7 +21,7 @@ private class PurgeSObjectBatch_Test {
 
 	@isTest
 	static void purgeSobjectTest(){
-		Lead leadToBeDeleted = [SELECT Id, ToBeDeleted__c, IsDeleted FROM Lead WHERE LastName =: STRING_DELETE_CRITERIA];
+		Lead leadToBeDeleted = [SELECT Id, IsDeleted FROM Lead WHERE LastName =: STRING_DELETE_CRITERIA];
 
 		Test.startTest();
 		Database.executeBatch(new PurgeSObjectBatch());
