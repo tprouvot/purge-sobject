@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BatchSizeRange</fullName>
+    <active>true</active>
+    <description>Batch Apex accepts a batch size from 1 to 2000.</description>
+    <errorConditionFormula>AND(NOT(ISBLANK(BatchSize__c)), OR(BatchSize__c &lt; 1, BatchSize__c &gt; 2000))</errorConditionFormula>
+    <errorDisplayField>BatchSize__c</errorDisplayField>
+    <errorMessage>The batch size must be between 1 and 2000.</errorMessage>
+</ValidationRule>

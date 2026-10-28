@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PublishPlatformEventPerChunk__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Indicates if we publish one platform event per batch chunk and result (success or failure), with the records listed in Records__c, instead of one platform event per record</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <inlineHelpText>Check to publish one event per chunk of records instead of one event per record, to use fewer platform events on large purges.</inlineHelpText>
+    <label>Publish Platform Event per chunk</label>
+    <type>Checkbox</type>
+</CustomField>

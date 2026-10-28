@@ -41,3 +41,6 @@ $RECYCLE.BIN/
 
 # VS Code extensions
 .history/*
+
+# Local review and improvement plan
+IMPROVEMENTS.md
