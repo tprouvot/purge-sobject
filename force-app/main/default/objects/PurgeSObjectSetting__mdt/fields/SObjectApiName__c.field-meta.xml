@@ -5,7 +5,7 @@
     <description>SObject API Name to parse</description>
     <externalId>false</externalId>
     <fieldManageability>DeveloperControlled</fieldManageability>
-    <inlineHelpText>Nom API du SObject à parcourir pour traiter la suppression d&apos;enregistrements. Un champ ToBeDeleted__c de type Boolean (formule ou case à cocher) doit être présent sur l&apos;objet.</inlineHelpText>
+    <inlineHelpText>API name of the SObject to purge. Unless ExternalToBeDeletedField__c or WhereClauseToBeDeleted__c is set, the object must have a Boolean field (formula or checkbox) named ToBeDeleted__c.</inlineHelpText>
     <label>SObject API Name</label>
     <length>80</length>
     <required>true</required>
