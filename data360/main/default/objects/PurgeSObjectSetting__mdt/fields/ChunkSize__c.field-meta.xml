@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ChunkSize__c</fullName>
+    <description>Data 360 only: number of primary keys queried and uploaded per CSV file, from 1,000 to 100,000. 50,000 when empty.</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <inlineHelpText>Data Lake Objects (__dll) only. Primary keys per CSV file sent to the Ingestion API, from 1,000 to 100,000 (50,000 when empty). Use a lower value for long primary keys.</inlineHelpText>
+    <label>Chunk Size</label>
+    <precision>6</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

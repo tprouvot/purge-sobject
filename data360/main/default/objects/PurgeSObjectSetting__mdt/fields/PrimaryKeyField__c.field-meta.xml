@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PrimaryKeyField__c</fullName>
+    <description>Data 360 only: API name of the primary key field of the Data Lake Object.</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <inlineHelpText>Data Lake Objects (__dll) only. API name of the primary key field of the Data Lake Object, for example order_id__c.</inlineHelpText>
+    <label>Primary Key Field</label>
+    <length>255</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

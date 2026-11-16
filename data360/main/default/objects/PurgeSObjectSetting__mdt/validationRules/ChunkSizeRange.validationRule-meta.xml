@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ChunkSizeRange</fullName>
+    <active>true</active>
+    <description>The chunk size of a Data Lake Object is from 1,000 to 100,000 primary keys per CSV file.</description>
+    <errorConditionFormula>AND(NOT(ISBLANK(ChunkSize__c)), OR(ChunkSize__c &lt; 1000, ChunkSize__c &gt; 100000))</errorConditionFormula>
+    <errorDisplayField>ChunkSize__c</errorDisplayField>
+    <errorMessage>The chunk size must be between 1,000 and 100,000.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RemoteSiteSetting xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Data 360 tenant endpoint, used for the Ingestion API calls of the SObject Purge Framework</description>
+    <disableProtocolSecurity>false</disableProtocolSecurity>
+    <isActive>true</isActive>
+    <url>https://YOUR_TENANT_HOST.c360a.salesforce.com</url>
+</RemoteSiteSetting>
