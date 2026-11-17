@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IngestionObject__c</fullName>
+    <description>Data 360 only: object of the Ingestion API connector that feeds the Data Lake Object.</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <inlineHelpText>Data Lake Objects (__dll) only. Object of the Ingestion API connector (schema object), for example Orders.</inlineHelpText>
+    <label>Ingestion Object</label>
+    <length>255</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

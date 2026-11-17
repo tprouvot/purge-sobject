@@ -188,6 +188,8 @@ private class PurgeSObjectBatch_Test {
 
 	@isTest
 	static void errorSummaryEmailTest(){
+		//the content of the built-in email is checked, even when the email template is deployed
+		PurgeSObjectEmail.useTemplates = false;
 		PurgeSObjectBatch batch = new PurgeSObjectBatch();
 		batch.sobjectName = 'Lead';
 		batch.whereClause = 'LastName = \'Doe\'';
@@ -210,6 +212,133 @@ private class PurgeSObjectBatch_Test {
 		Assert.isTrue(body.contains('- [ENTITY_IS_DELETED] () entity is deleted'), 'The email should contain the deletion errors');
 		Assert.isTrue(body.contains('- WHERE clause: LastName = \'Doe\''), 'The email should contain the WHERE clause');
 		Assert.isTrue(body.contains('- Batch size: 50'), 'The email should contain the batch size');
+	}
+
+	@isTest
+	static void dryRunTest(){
+		//the content of the built-in email is checked, even when the email template is deployed
+		PurgeSObjectEmail.useTemplates = false;
+		PurgeSObjectBatch.settingsOverride = new List<PurgeSObjectSetting__mdt>{
+			newSetting('Lead', 1, 'LastName = \'' + STRING_DELETE_CRITERIA + '\'', true)};
+
+		Test.startTest();
+		Database.executeBatch(new PurgeSObjectBatch());
+		Test.stopTest();
+
+		Assert.areEqual(0, [SELECT COUNT() FROM Lead WHERE IsDeleted = true ALL ROWS], 'A dry run should not delete any record');
+
+		PurgeSObjectBatch batch = new PurgeSObjectBatch();
+		Assert.isTrue(batch.dryRun, 'The dry run option of the setting should be used');
+		batch.execute(null, [SELECT Id FROM Lead WHERE LastName = :STRING_DELETE_CRITERIA]);
+		Assert.areEqual(1, batch.matchedCount, 'The matching records should be counted');
+		Assert.areEqual(0, batch.deletedCount, 'No record should be counted as deleted');
+
+		Messaging.SingleEmailMessage email = batch.getErrorSummaryEmail(0, null);
+		Assert.isNotNull(email, 'A dry run should always send its summary');
+		Assert.isTrue(email.getSubject().startsWith('Dry run of the purge of Lead'), 'The subject should name the dry run');
+		Assert.isTrue(email.getPlainTextBody().contains('Records matching the delete logic: 1'), 'The email should contain the count');
+	}
+
+	@isTest
+	static void handlerPurgesTheSettingTest(){
+		PurgeSObjectBatch.settingsOverride = new List<PurgeSObjectSetting__mdt>{newSetting('Handled__x', 5, 'Field__c = 1', false)};
+		HandlerStub stub = new HandlerStub('Handled__x');
+		PurgeSObjectBatch.handlersOverride = new List<PurgeSObjectHandler>{stub};
+		PurgeSObjectBatch batch = new PurgeSObjectBatch();
+
+		batch.start(null);
+		batch.finish(null);
+
+		Assert.areEqual(0, batch.handlerIndex, 'The setting should be purged by the handler');
+		Assert.isTrue(batch.runErrors.isEmpty(), 'The setting should be handed off without error');
+		Assert.areEqual('Handled__x', stub.received?.SObjectApiName__c, 'The handler should receive the setting');
+	}
+
+	@isTest
+	static void handlerErrorIsReportedTest(){
+		PurgeSObjectBatch.settingsOverride = new List<PurgeSObjectSetting__mdt>{newSetting('Handled__x', 5, 'Field__c = 1', false)};
+		HandlerStub stub = new HandlerStub('Handled__x');
+		stub.error = 'The configuration of the module is invalid';
+		PurgeSObjectBatch.handlersOverride = new List<PurgeSObjectHandler>{stub};
+		PurgeSObjectBatch batch = new PurgeSObjectBatch();
+		batch.publishPeKo = false;
+
+		batch.finish(null);
+
+		Assert.areEqual(1, batch.runErrors.size(), 'An error of the handler should be reported');
+		Assert.isTrue(batch.runErrors.get(0).contains('The configuration of the module is invalid'), 'The error of the handler should be in the summary');
+	}
+
+	@isTest
+	static void settingWithoutHandlerTest(){
+		PurgeSObjectBatch.settingsOverride = new List<PurgeSObjectSetting__mdt>{
+			newSetting('Lead', 1, 'LastName = \'' + STRING_DELETE_CRITERIA + '\'', true)};
+		PurgeSObjectBatch.handlersOverride = new List<PurgeSObjectHandler>{new HandlerStub('Handled__x')};
+
+		PurgeSObjectBatch batch = new PurgeSObjectBatch();
+
+		Assert.isNull(batch.handlerIndex, 'A setting that no handler claims should be purged by PurgeSObjectBatch');
+	}
+
+	@isTest
+	static void getHandlersTest(){
+		//the classes of HANDLER_CLASSES that aren't deployed are ignored, without error
+		for(PurgeSObjectHandler handler : PurgeSObjectBatch.getHandlers()){
+			Assert.isNotNull(handler, 'Only the deployed handlers should be returned');
+		}
+	}
+
+	@isTest
+	static void startSequenceAfterTest(){
+		PurgeSObjectBatch.settingsOverride = new List<PurgeSObjectSetting__mdt>{
+			newSetting('Lead', 1, 'LastName = \'' + STRING_DELETE_CRITERIA + '\'', true)};
+
+		Test.startTest();
+		Id jobId = PurgeSObjectBatch.startSequenceAfter(0);
+		Id noJobId = PurgeSObjectBatch.startSequenceAfter(1);
+		Test.stopTest();
+
+		Assert.isNotNull(jobId, 'The setting after sequence 0 should be started');
+		Assert.isNull(noJobId, 'No batch should be started after the last sequence');
+	}
+
+	/**
+	 * @description Returns a setting built in memory, so the tests don't depend on the records of the org
+	 * @param apiName SObjectApiName__c
+	 * @param sequence Sequence__c
+	 * @param whereClause WhereClauseToBeDeleted__c
+	 * @param dryRun DryRun__c
+	 * @return `PurgeSObjectSetting__mdt` Setting
+	 */
+	private static PurgeSObjectSetting__mdt newSetting(String apiName, Integer sequence, String whereClause, Boolean dryRun){
+		return new PurgeSObjectSetting__mdt(DeveloperName = apiName.replace('__', '_'), MasterLabel = apiName,
+			SObjectApiName__c = apiName, Sequence__c = sequence, WhereClauseToBeDeleted__c = whereClause, DryRun__c = dryRun,
+			PublishPlatformEventOk__c = false, PublishPlatformEventKo__c = false, PublishPlatformEventPerChunk__c = false);
+	}
+
+	/**
+	 * @description Handler of an optional module, that handles the settings of one object and records the setting it receives
+	 */
+	public class HandlerStub implements PurgeSObjectHandler {
+		private String objectName;
+		private PurgeSObjectSetting__mdt received;
+		private String error;
+		public Boolean running = false;
+		public HandlerStub(String objectName){
+			this.objectName = objectName;
+		}
+		public Boolean handles(PurgeSObjectSetting__mdt setting){
+			return setting.SObjectApiName__c == this.objectName;
+		}
+		public void start(PurgeSObjectSetting__mdt setting){
+			if(this.error != null){
+				throw new IllegalArgumentException(this.error);
+			}
+			this.received = setting;
+		}
+		public Boolean isRunning(){
+			return this.running;
+		}
 	}
 
 	/**

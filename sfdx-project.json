@@ -3,10 +3,31 @@
     {
       "path": "force-app",
       "default": true
+    },
+    {
+      "path": "data360",
+      "default": false
     }
   ],
   "name": "purge-sobject",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "68.0"
+  "sourceApiVersion": "68.0",
+  "replacements": [
+    {
+      "glob": "data360/main/default/{externalCredentials,namedCredentials}/*",
+      "stringToReplace": "https://YOUR_MY_DOMAIN.my.salesforce.com",
+      "replaceWithEnv": "PURGE_D360_MY_DOMAIN_URL"
+    },
+    {
+      "glob": "data360/main/default/remoteSiteSettings/*",
+      "stringToReplace": "https://YOUR_TENANT_HOST.c360a.salesforce.com",
+      "replaceWithEnv": "PURGE_D360_TENANT_URL"
+    },
+    {
+      "glob": "data360/main/default/extlClntAppOauthPolicies/*",
+      "stringToReplace": "your.run-as.user@example.com",
+      "replaceWithEnv": "PURGE_D360_RUN_AS_USERNAME"
+    }
+  ]
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <description>Summary of the purge of a Data 360 Data Lake Object, sent to the running user for errors, warnings and dry runs. The {{Name}} placeholders are filled by PurgeDataLakeObjectReport: see the README for the list.</description>
+    <encodingKey>UTF-8</encodingKey>
+    <name>Purge Data Lake Object Summary</name>
+    <style>none</style>
+    <subject>Purge of {{ObjectName}}: {{Status}}</subject>
+    <type>custom</type>
+    <uiType>SFX</uiType>
+</EmailTemplate>

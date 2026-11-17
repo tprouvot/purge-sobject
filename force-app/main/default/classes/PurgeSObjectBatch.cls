@@ -10,6 +10,18 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	private static final Integer DEFAULT_BATCH_SIZE = 200;
 	//maximum number of distinct deletion errors listed in the summary email
 	private static final Integer MAX_ERROR_SAMPLES = 10;
+	//Lightning email template of the summary email, customizable in the Email Templates tab
+	private static final String SUMMARY_EMAIL_TEMPLATE = 'PurgeSObject_Summary';
+	//PurgeSObjectHandler implementations of the optional modules, used only when they are deployed (data360 folder)
+	private static final List<String> HANDLER_CLASSES = new List<String>{'PurgeDataLakeObjectHandler'};
+
+	//settings used instead of the custom metadata records, sorted by sequence: set by the tests
+	@TestVisible
+	private static List<PurgeSObjectSetting__mdt> settingsOverride;
+	//handlers used instead of HANDLER_CLASSES: set by the tests
+	@TestVisible
+	private static List<PurgeSObjectHandler> handlersOverride;
+	private static List<PurgeSObjectHandler> handlers;
 
 	private Integer sequence;
 	private Integer lastSequence;
@@ -29,8 +41,17 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 
 	@TestVisible
 	private String sobjectName;
+	@TestVisible
+	private Boolean dryRun = false;
+	//setting of the current sequence, with all its fields, passed to the handler of an optional module
+	private PurgeSObjectSetting__mdt setting;
+	//index in getHandlers() of the handler that purges the setting, null when PurgeSObjectBatch purges it
+	@TestVisible
+	private Integer handlerIndex;
 
 	//summary of the run, kept between the chunks and sent by email when there are errors
+	@TestVisible
+	private Integer matchedCount = 0;
 	@TestVisible
 	private Integer deletedCount = 0;
 	@TestVisible
@@ -65,6 +86,10 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		if(String.isBlank(this.sobjectName)){
 			return getEmptyQueryLocator();
 		}
+		if(this.handlerIndex != null){
+			//purged by the handler of an optional module, which is started in finish
+			return getEmptyQueryLocator();
+		}
 		try {
 			String extId = getExternalIdValue();
 			String query = 'SELECT Id' + extId + ' FROM ' + String.escapeSingleQuotes(this.sobjectName) + ' WHERE ' + getWhereClause();
@@ -78,6 +103,11 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	}
 
 	public void execute(Database.BatchableContext BC, List<SObject> scope){
+		//dry run: count the matching records, delete nothing and publish no event
+		if(this.dryRun){
+			this.matchedCount += scope.size();
+			return;
+		}
 		SObjectType sObjType = ((SObject) Type.forName(this.sobjectName).newInstance()).getSObjectType();
 		if (sObjType.getDescribe().isDeletable()) {
 			List<Database.DeleteResult> drList = Database.delete(scope, false);
@@ -94,11 +124,13 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	 * @param  BC BatchableContext
 	 */
 	public void finish(Database.BatchableContext BC){
+		//the handler of an optional module purges the setting asynchronously, and continues the chain when it is done
+		Boolean handedOff = this.handlerIndex != null && this.runErrors.isEmpty() && startHandler();
+
 		//call the batch only if the Object list is not the last one
-		if(sequence != null && sequence < lastSequence){
+		if(!handedOff && sequence != null && sequence < lastSequence){
 			try {
-				PurgeSObjectBatch nextBatch = new PurgeSObjectBatch(sequence);
-				Database.executeBatch(nextBatch, nextBatch.getBatchSize());
+				startSequenceAfter(sequence);
 			} catch (Exception e) {
 				this.runErrors.add('The purge of the next sequence could not be started: ' + e.getMessage());
 			}
@@ -125,16 +157,84 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 	}
 
 	/**
+	 * @description Start the purge of the setting that follows a sequence. Used by finish, and by the handlers of the optional
+	 * modules to continue the chain when they are done with their setting
+	 * @param sequence Sequence of the setting that was just purged
+	 * @return `Id` Id of the batch job, null when there is no setting after this sequence
+	 */
+	public static Id startSequenceAfter(Integer sequence){
+		PurgeSObjectBatch nextBatch = new PurgeSObjectBatch(sequence);
+		if(String.isBlank(nextBatch.sobjectName)){
+			return null;
+		}
+		return Database.executeBatch(nextBatch, nextBatch.getBatchSize());
+	}
+
+	/**
+	 * @description Returns the handlers of the optional modules that are deployed in the org. A class that doesn't exist,
+	 * or that doesn't implement PurgeSObjectHandler, is ignored.
+	 * @return `List<PurgeSObjectHandler>` Handlers, empty when no optional module is deployed
+	 */
+	public static List<PurgeSObjectHandler> getHandlers(){
+		if(handlersOverride != null){
+			return handlersOverride;
+		}
+		if(handlers == null){
+			handlers = new List<PurgeSObjectHandler>();
+			for(String className : HANDLER_CLASSES){
+				try {
+					Type handlerType = Type.forName(className);
+					Object handler = handlerType != null ? handlerType.newInstance() : null;
+					if(handler instanceof PurgeSObjectHandler){
+						handlers.add((PurgeSObjectHandler) handler);
+					}
+				} catch (Exception e) {
+					System.debug(LoggingLevel.WARN, 'The handler ' + className + ' is ignored: ' + e.getMessage());
+				}
+			}
+		}
+		return handlers;
+	}
+
+	/**
+	 * @description Returns the index of the handler that purges a setting
+	 * @param setting Custom metadata record
+	 * @return `Integer` Index in getHandlers(), null when PurgeSObjectBatch purges the setting itself
+	 */
+	private static Integer findHandler(PurgeSObjectSetting__mdt setting){
+		List<PurgeSObjectHandler> available = getHandlers();
+		for(Integer i = 0; i < available.size(); i++){
+			if(available.get(i).handles(setting)){
+				return i;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @description Start the purge of the setting with the handler of its optional module
+	 * @return `Boolean` true when the handler started the purge and will continue the chain, false otherwise
+	 */
+	private Boolean startHandler(){
+		try {
+			getHandlers().get(this.handlerIndex).start(this.setting);
+			return true;
+		} catch (Exception e) {
+			String message = 'The purge of ' + this.sobjectName + ' could not be started: ' + e.getMessage();
+			this.runErrors.add(message);
+			publishConfigurationError(message);
+			return false;
+		}
+	}
+
+	/**
 	 * @description Set the parameters of the batch: the sobjectName to parse and its sequence
 	 * @param  sequence Object order of execution
 	 */
 	private void setParams(Integer sequence){
 		//get the next sequences to avoid issue with missing numbers
-		//use SOQL instead of getAll(): getAll() only returns the first 255 characters of WhereClauseToBeDeleted__c
 		List<PurgeSObjectSetting__mdt> settings = new List<PurgeSObjectSetting__mdt>();
-		for(PurgeSObjectSetting__mdt setting : [SELECT SObjectApiName__c, Sequence__c, BatchSize__c, PublishPlatformEventOk__c,
-		PublishPlatformEventKo__c, PublishPlatformEventPerChunk__c, PlatformEventExternalId__c, ExternalToBeDeletedField__c,
-		WhereClauseToBeDeleted__c FROM PurgeSObjectSetting__mdt ORDER BY Sequence__c]){
+		for(PurgeSObjectSetting__mdt setting : getAllSettings()){
 			//if param is null it means the method was called from the scheduled job: start with the first sequence
 			if(sequence == null || setting.Sequence__c > sequence){
 				settings.add(setting);
@@ -153,8 +253,11 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		}
 		//use the first item of the list
 		PurgeSObjectSetting__mdt sett = settings.get(0);
+		this.setting = sett;
 		this.sequence = Integer.valueOf(sett.Sequence__c);
 		this.sobjectName = sett.SObjectApiName__c;
+		this.dryRun = sett.DryRun__c == true;
+		this.handlerIndex = findHandler(sett);
 		this.batchSize = sett.BatchSize__c != null ? Integer.valueOf(sett.BatchSize__c) : null;
 		this.publishPeOk = sett.PublishPlatformEventOk__c;
 		this.publishPeKo = sett.PublishPlatformEventKo__c;
@@ -162,6 +265,20 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		this.externalId = sett.PlatformEventExternalId__c;
 		this.externalToBeDeleted = sett.ExternalToBeDeletedField__c;
 		this.whereClause = sett.WhereClauseToBeDeleted__c;
+	}
+
+	/**
+	 * @description Returns all the settings sorted by sequence, with all their fields: the fields added by an optional module
+	 * exist only when the module is deployed, so they are read with a dynamic query
+	 * @return `List<PurgeSObjectSetting__mdt>` Settings sorted by sequence
+	 */
+	private static List<PurgeSObjectSetting__mdt> getAllSettings(){
+		if(settingsOverride != null){
+			return settingsOverride;
+		}
+		//use SOQL instead of getAll(): getAll() only returns the first 255 characters of WhereClauseToBeDeleted__c
+		List<String> fields = new List<String>(Schema.SObjectType.PurgeSObjectSetting__mdt.fields.getMap().keySet());
+		return Database.query('SELECT ' + String.join(fields, ', ') + ' FROM PurgeSObjectSetting__mdt ORDER BY Sequence__c');
 	}
 
 	/**
@@ -185,23 +302,34 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 
 	/**
 	 * @description Returns the summary of the run to send by email to the running user (who ran or scheduled the purge),
-	 * or null when there was no error
+	 * or null when there was no error. A dry run always returns its summary, unless the handler of an optional module
+	 * purges the setting: the module reports its own dry run.
 	 * @param failedChunks Number of chunks that failed with an unhandled error
 	 * @param firstChunkError Error of the first chunk that failed
 	 * @return `Messaging.SingleEmailMessage` Summary email, null when there was no error
 	 */
 	@TestVisible
 	private Messaging.SingleEmailMessage getErrorSummaryEmail(Integer failedChunks, String firstChunkError){
-		if(this.failedCount == 0 && this.runErrors.isEmpty() && failedChunks == 0){
+		Boolean hasErrors = this.failedCount > 0 || !this.runErrors.isEmpty() || failedChunks > 0;
+		Boolean isCoreDryRun = this.dryRun && this.handlerIndex == null;
+		if(!hasErrors && !isCoreDryRun){
 			return null;
 		}
 
-		List<String> lines = new List<String>{
-			'The purge of ' + this.sobjectName + ' completed with errors.',
-			'',
-			'Records deleted: ' + this.deletedCount,
-			'Records not deleted: ' + this.failedCount
-		};
+		List<String> lines = new List<String>();
+		String subject;
+		if(isCoreDryRun){
+			subject = 'Dry run of the purge of ' + this.sobjectName + (hasErrors ? ' completed with errors' : '');
+			lines.add('Dry run of the purge of ' + this.sobjectName + ': no record was deleted.');
+			lines.add('');
+			lines.add('Records matching the delete logic: ' + this.matchedCount);
+		} else{
+			subject = 'Purge of ' + this.sobjectName + ' completed with errors';
+			lines.add('The purge of ' + this.sobjectName + ' completed with errors.');
+			lines.add('');
+			lines.add('Records deleted: ' + this.deletedCount);
+			lines.add('Records not deleted: ' + this.failedCount);
+		}
 		if(failedChunks > 0){
 			lines.add('Chunks not processed because of an unhandled error: ' + failedChunks + ' (first error: ' + firstChunkError + ')');
 		}
@@ -225,13 +353,24 @@ public with sharing class PurgeSObjectBatch implements Database.Batchable<SObjec
 		lines.add('- Sequence: ' + this.sequence);
 		lines.add('- WHERE clause: ' + getWhereClause());
 		lines.add('- Batch size: ' + getBatchSize());
+		lines.add('- Dry run: ' + this.dryRun);
 
-		Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-		email.setTargetObjectId(UserInfo.getUserId());
-		email.setSaveAsActivity(false);
-		email.setSubject('Purge of ' + this.sobjectName + ' completed with errors');
-		email.setPlainTextBody(String.join(lines, '\n'));
-		return email;
+		//the email template can be customized in the Email Templates tab; the lines above are used without it
+		return new PurgeSObjectEmail(SUMMARY_EMAIL_TEMPLATE)
+			.put('Status', isCoreDryRun ? (hasErrors ? 'dry run completed with errors' : 'dry run') : 'completed with errors')
+			.put('ObjectName', this.sobjectName)
+			.put('Sequence', this.sequence)
+			.put('MatchedCount', isCoreDryRun ? this.matchedCount : this.deletedCount + this.failedCount)
+			.put('DeletedCount', this.deletedCount)
+			.put('FailedCount', this.failedCount)
+			.put('FailedChunks', failedChunks)
+			.put('FirstChunkError', failedChunks > 0 ? '(first error: ' + firstChunkError + ')' : '')
+			.put('Errors', this.runErrors)
+			.put('DeletionErrors', this.errorSamples)
+			.put('WhereClause', getWhereClause())
+			.put('BatchSize', getBatchSize())
+			.put('DryRun', this.dryRun)
+			.build(subject, String.join(lines, '\n'));
 	}
 
 	/**

@@ -37,4 +37,32 @@ private class PurgeSObjectBatchSchedulable_Test {
 
 		Assert.areEqual(1, jobs, 'The scheduled job should not start a purge while another one is running');
 	}
+
+	@isTest
+	static void skipPurgeWhenHandlerRunningTest(){
+		RunningHandler handler = new RunningHandler();
+		PurgeSObjectBatch.handlersOverride = new List<PurgeSObjectHandler>{handler};
+
+		Test.startTest();
+		new PurgeSObjectBatchSchedulable().execute(null);
+		Integer jobs = [SELECT COUNT() FROM AsyncApexJob WHERE ApexClass.Name = 'PurgeSObjectBatch'];
+		Test.stopTest();
+
+		Assert.areEqual(0, jobs, 'The scheduled job should not start a purge while a job of an optional module is running');
+	}
+
+	/**
+	 * @description Handler of an optional module that is still running
+	 */
+	private class RunningHandler implements PurgeSObjectHandler {
+		public Boolean handles(PurgeSObjectSetting__mdt setting){
+			return false;
+		}
+		public void start(PurgeSObjectSetting__mdt setting){
+			return;
+		}
+		public Boolean isRunning(){
+			return true;
+		}
+	}
 }

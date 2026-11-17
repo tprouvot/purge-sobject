@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DataLakeObjectRequiredFields</fullName>
+    <active>true</active>
+    <description>A Data Lake Object (__dll) needs its Ingestion API connector, object and primary key, and a WHERE clause: it has no default delete logic.</description>
+    <errorConditionFormula>AND(
+    RIGHT(LOWER(SObjectApiName__c), 5) = &apos;__dll&apos;,
+    OR(
+        ISBLANK(IngestionConnector__c),
+        ISBLANK(IngestionObject__c),
+        ISBLANK(PrimaryKeyField__c),
+        ISBLANK(WhereClauseToBeDeleted__c)
+    )
+)</errorConditionFormula>
+    <errorMessage>A Data Lake Object (__dll) needs IngestionConnector__c, IngestionObject__c, PrimaryKeyField__c and a WhereClauseToBeDeleted__c in Data 360 SQL.</errorMessage>
+</ValidationRule>

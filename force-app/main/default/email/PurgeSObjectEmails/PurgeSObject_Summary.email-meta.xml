@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <description>Summary of the purge of an SObject, sent to the running user when the purge has errors and for a dry run. The {{Name}} placeholders are filled by PurgeSObjectBatch: see the README for the list.</description>
+    <encodingKey>UTF-8</encodingKey>
+    <name>Purge SObject Summary</name>
+    <style>none</style>
+    <subject>Purge of {{ObjectName}}: {{Status}}</subject>
+    <type>custom</type>
+    <uiType>SFX</uiType>
+</EmailTemplate>

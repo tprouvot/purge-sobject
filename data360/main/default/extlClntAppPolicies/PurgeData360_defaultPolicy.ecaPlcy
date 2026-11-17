@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtlClntAppConfigurablePolicies xmlns="http://soap.sforce.com/2006/04/metadata">
+    <externalClientApplication>PurgeData360</externalClientApplication>
+    <isEnabled>true</isEnabled>
+    <isOauthPluginEnabled>true</isOauthPluginEnabled>
+    <label>PurgeData360_defaultPolicy</label>
+    <startPage>None</startPage>
+</ExtlClntAppConfigurablePolicies>

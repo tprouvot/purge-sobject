@@ -1,0 +1,23 @@
+<div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #181818;">
+<p>Hello {{RecipientName}},</p>
+<p>The purge of <b>{{ObjectName}}</b> {{Status}}.</p>
+<table style="border-collapse: collapse; margin: 8px 0 16px 0;">
+<tr><td style="padding: 4px 16px 4px 0; color: #5c5c5c;">Records matching the delete logic</td><td style="padding: 4px 0;"><b>{{MatchedCount}}</b></td></tr>
+<tr><td style="padding: 4px 16px 4px 0; color: #5c5c5c;">Records deleted</td><td style="padding: 4px 0;"><b>{{DeletedCount}}</b></td></tr>
+<tr><td style="padding: 4px 16px 4px 0; color: #5c5c5c;">Records not deleted</td><td style="padding: 4px 0;"><b>{{FailedCount}}</b></td></tr>
+<tr><td style="padding: 4px 16px 4px 0; color: #5c5c5c;">Chunks not processed (unhandled error)</td><td style="padding: 4px 0;">{{FailedChunks}} {{FirstChunkError}}</td></tr>
+</table>
+<p style="margin: 16px 0 4px 0;"><b>Errors</b></p>
+{{Errors}}
+<p style="margin: 16px 0 4px 0;"><b>Deletion errors</b> (up to 10 distinct messages)</p>
+{{DeletionErrors}}
+<p style="margin: 16px 0 4px 0;"><b>Configuration</b></p>
+<table style="border-collapse: collapse;">
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">SObject</td><td>{{ObjectName}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Sequence</td><td>{{Sequence}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">WHERE clause</td><td>{{WhereClause}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Batch size</td><td>{{BatchSize}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Dry run</td><td>{{DryRun}}</td></tr>
+</table>
+<p style="margin-top: 24px; font-size: 12px; color: #706e6b;">Sent by the SObject Purge Framework of {{OrgName}} on {{RunDate}}.</p>
+</div>

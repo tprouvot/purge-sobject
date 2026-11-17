@@ -1,0 +1,28 @@
+<div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #181818;">
+<p>Hello {{RecipientName}},</p>
+<p>The purge of the Data Lake Object <b>{{ObjectName}}</b> ({{Mode}}) {{Status}}.</p>
+<table style="border-collapse: collapse; margin: 8px 0 16px 0;">
+<tr><td style="padding: 4px 16px 4px 0; color: #5c5c5c;">Records matching (WHERE clause or files)</td><td style="padding: 4px 0;"><b>{{MatchedCount}}</b></td></tr>
+<tr><td style="padding: 4px 16px 4px 0; color: #5c5c5c;">Primary keys submitted for deletion</td><td style="padding: 4px 0;"><b>{{SubmittedCount}}</b> in {{FileCount}} file(s)</td></tr>
+<tr><td style="padding: 4px 16px 4px 0; color: #5c5c5c;">Records not deleted after the job</td><td style="padding: 4px 0;"><b>{{NotDeletedCount}}</b> ({{CheckedCount}} checked)</td></tr>
+<tr><td style="padding: 4px 16px 4px 0; color: #5c5c5c;">Ingestion API job</td><td style="padding: 4px 0;">{{JobId}}, {{JobState}} (processing time: {{ProcessingTime}} s)</td></tr>
+</table>
+<p style="margin: 16px 0 4px 0;"><b>Errors</b></p>
+{{Errors}}
+<p style="margin: 16px 0 4px 0;"><b>Warnings</b></p>
+{{Warnings}}
+<p style="margin: 16px 0 4px 0;"><b>Configuration</b></p>
+<table style="border-collapse: collapse;">
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Data Lake Object</td><td>{{ObjectName}} (data space {{Dataspace}})</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Setting and sequence</td><td>{{SettingName}}, {{Sequence}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Ingestion API connector and object</td><td>{{Connector}} / {{SourceObject}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Primary key</td><td>{{PrimaryKey}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">WHERE clause</td><td>{{WhereClause}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Files</td><td>{{Files}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Chunk size</td><td>{{ChunkSize}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Record version column</td><td>{{RecordVersion}}</td></tr>
+<tr><td style="padding: 2px 16px 2px 0; color: #5c5c5c;">Dry run</td><td>{{DryRun}}</td></tr>
+</table>
+<p style="margin-top: 16px; font-size: 12px; color: #706e6b;">The records are deleted from the Data Lake Object. The Data Model Objects, identity resolution, segments and calculated insights are updated at their next run.</p>
+<p style="font-size: 12px; color: #706e6b;">Sent by the SObject Purge Framework of {{OrgName}} on {{RunDate}}.</p>
+</div>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtlClntAppOauthSettings xmlns="http://soap.sforce.com/2006/04/metadata">
+    <commaSeparatedOauthScopes>Api, CDPIngest</commaSeparatedOauthScopes>
+    <externalClientApplication>PurgeData360</externalClientApplication>
+    <isFirstPartyAppEnabled>false</isFirstPartyAppEnabled>
+    <label>PurgeData360_oauth</label>
+</ExtlClntAppOauthSettings>
